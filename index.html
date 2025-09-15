@@ -2,71 +2,76 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
   <title>충곽테트리스</title>
-  <!-- Pretendard Variable (Apple-like UI feel) -->
+  <!-- Fonts: Pretendard (KR), CR Cobane (EN). If CR Cobane isn't installed, it will fall back gracefully. -->
   <link rel="preconnect" href="https://cdn.jsdelivr.net"/>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable.css"/>
   <style>
     :root{
-      --bg:#0b0b0d;           /* neutral dark */
-      --surface:#111114;      /* card surface */
-      --border:#1c1c1e;       /* subtle border */
-      --fg:#f5f5f7;           /* Apple-ish foreground */
-      --muted:#a1a1a6;        /* secondary text */
-      --accent:#0a84ff;       /* iOS blue */
-      --grid:#0e0e11;         /* board grid lines */
-      --ghost:#2c2c31;        /* ghost piece */
-      --ok:#30d158;           /* system green */
-      --warn:#ffd60a;         /* system yellow */
+      --bg:#0b0b0d;          /* neutral dark */
+      --surface:#111114;     /* card surface */
+      --surface-2:#0e0e11;   /* board bg */
+      --border:#1c1c1e;      /* subtle border */
+      --fg:#f5f5f7;          /* Apple-ish foreground */
+      --muted:#a1a1a6;       /* secondary text */
+      --accent:#0a84ff;      /* iOS blue */
+      --grid:#15151a;        /* board grid lines */
+      --ghost:#2c2c31;       /* ghost piece */
     }
     *{box-sizing:border-box}
-    html,body{height:100%}
+    html,body{height:100%; overflow:hidden}
     body{
-      margin:0;
-      background:var(--bg);
-      color:var(--fg);
-      font-family:"Pretendard Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, Apple Color Emoji, Noto Color Emoji, sans-serif;
-      font-weight:500;
+      margin:0; background:var(--bg); color:var(--fg);
+      font-family:"Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, Apple Color Emoji, Noto Color Emoji, sans-serif;
       -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
     }
-    .wrap{max-width:1100px;margin:40px auto;padding:0 20px;display:grid;gap:20px;grid-template-columns: minmax(320px, 1fr) 340px;align-items:start}
-    h1{margin:0 0 16px;font-size:24px;font-weight:700;letter-spacing:.2px}
-    .panel{background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:0 8px 30px rgba(0,0,0,.25);padding:18px}
-    .hud{display:grid;gap:10px}
-    .stat{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,#121216,#101014)}
+    /* Prefer CR Cobane for Latin text when available */
+    :lang(en), .latin{ font-family:"CR Cobane", "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+    .wrap{height:100vh; max-width:1120px; margin:0 auto; padding:20px; display:grid; gap:20px; grid-template-columns:minmax(320px, 1fr) 340px; align-items:center}
+    @media (max-width: 980px){ .wrap{ grid-template-columns:1fr; align-items:start; padding:12px; } }
+
+    h1{margin:0 0 16px; font-size:22px; font-weight:700; letter-spacing:.2px}
+    .panel{background:var(--surface); border:1px solid var(--border); border-radius:18px; box-shadow:0 8px 30px rgba(0,0,0,.25); padding:16px}
+
+    .hud{display:grid; gap:10px}
+    .stat{display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border:1px solid var(--border); border-radius:12px; background:linear-gradient(180deg,#121216,#101014)}
     .stat span{color:var(--muted)}
-    .badge{font-size:12px;color:var(--muted)}
-    .keys{font-size:12px;color:var(--muted);display:grid;gap:6px}
-    canvas{
-      display:block;border-radius:18px;
-      background:
+    .badge{font-size:12px; color:var(--muted)}
+    .keys{font-size:12px; color:var(--muted); display:grid; gap:6px}
+
+    canvas#game{
+      width:320px; height:640px; /* fixed to avoid layout shift */
+      display:block; border-radius:14px; background:
         repeating-linear-gradient(0deg,var(--grid) 0 2px,transparent 2px 32px),
         repeating-linear-gradient(90deg,var(--grid) 0 2px,transparent 2px 32px),
-        #0a0a0c;
+        var(--surface-2);
       border:1px solid var(--border);
     }
-    .pill{display:inline-block;padding:2px 10px;border-radius:999px;background:#0f0f12;border:1px solid var(--border);color:var(--muted)}
-    .btn{cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;border:1px solid var(--border);background:#121215;color:var(--fg);font-weight:600}
+    .mini{ width:100%; height:100%; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; display:grid; place-items:center }
+
+    .pill{display:inline-block; padding:2px 10px; border-radius:999px; background:#0f0f12; border:1px solid var(--border); color:var(--muted)}
+    .btn{cursor:pointer; display:inline-flex; align-items:center; gap:8px; padding:10px 14px; border-radius:12px; border:1px solid var(--border); background:#121215; color:var(--fg); font-weight:600}
     .btn:hover{background:#141418}
     .btn:active{transform:translateY(1px)}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-    .nextgrid{display:grid;grid-template-rows:repeat(5,80px);gap:10px}
-    .mini{width:100%;height:100%;background:#0d0d10;border:1px solid var(--border);border-radius:12px;display:grid;place-items:center}
-    .footer{color:var(--muted);font-size:12px;text-align:center;margin:12px 0 4px}
-    @media (max-width:960px){.wrap{grid-template-columns:1fr}}
+
+    .grid2{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    .nextgrid{display:grid; grid-template-rows:repeat(5,80px); gap:10px}
+
+    .footer{color:var(--muted); font-size:12px; text-align:center; margin:12px 0 4px}
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="panel">
       <h1>충곽테트리스 <span class="pill">T‑Spin Detect</span> <span class="pill">SRS + 180°</span></h1>
-      <canvas id="game" width="320" height="640"></canvas>
+      <canvas id="game" width="320" height="640" tabindex="0"></canvas>
       <div class="grid2" style="margin-top:12px">
         <button class="btn" id="restart">↻ 다시 시작 (R)</button>
         <button class="btn" id="pause">⏸ 일시정지 (P)</button>
       </div>
-      <p class="footer">Keys: ←→ 이동, ↓ 소프트드랍(착지 후 1초 뒤 고정), Z CCW / X CW, A 180°, Space 하드드랍, C 홀드, P 일시정지</p>
+      <p class="footer">Controls — 이동: ← →, 소프트드랍: ↓ (착지 1초 후 고정), 회전: Z(CCW) / ↑(CW) / A(180°), 하드드랍: Space, 홀드: C, 일시정지: P</p>
     </div>
     <div class="panel hud">
       <div class="stat"><span>점수</span><strong id="score">0</strong></div>
@@ -93,7 +98,7 @@
       </div>
       <div class="keys">
         <div><b>이동:</b> ← →  | <b>소프트드랍:</b> ↓ (착지 후 1초 뒤 고정)</div>
-        <div><b>회전:</b> Z(CCW), X(CW), A(180°) | <b>홀드:</b> C | <b>일시정지:</b> P</div>
+        <div><b>회전:</b> Z(CCW), ↑(CW), A(180°) | <b>홀드:</b> C | <b>일시정지:</b> P</div>
       </div>
     </div>
   </div>
@@ -106,16 +111,9 @@ const LOCK_DELAY = 30; // frames (normal lock)
 const SOFT_LOCK_DELAY_FRAMES = 60; // 1s at ~60fps when soft-dropped and grounded
 const DAS=10, ARR=1, SOFT_DROP = 1; // movement
 
-// Apple system-like colors (muted, not neon)
+// Muted system-like palette
 const COLORS = {
-  I:'#64d2ff', // system cyan
-  J:'#0a84ff', // system blue
-  L:'#ff9f0a', // system orange
-  O:'#ffd60a', // system yellow
-  S:'#30d158', // system green
-  T:'#bf5af2', // system purple
-  Z:'#ff453a', // system red
-  GHOST:'#2c2c31'
+  I:'#64d2ff', J:'#0a84ff', L:'#ff9f0a', O:'#ffd60a', S:'#30d158', T:'#bf5af2', Z:'#ff453a', GHOST:'#2c2c31'
 };
 
 const SHAPES = {
@@ -228,7 +226,7 @@ class Piece{
 // ====== Game ======
 class Game{
   constructor(){
-    this.canvas=document.getElementById('game'); this.ctx=this.canvas.getContext('2d');
+    this.canvas=document.getElementById('game'); this.ctx=this.canvas.getContext('2d', {alpha:false});
     this.holdCanvas=document.getElementById('hold'); this.hctx=this.holdCanvas.getContext('2d');
     this.nextCanvases=[...Array(5)].map((_,i)=>document.getElementById('n'+i).getContext('2d'));
     this.scoreEl=s('#score'); this.levelEl=s('#level'); this.linesEl=s('#lines'); this.statusEl=s('#status'); this.lastActionEl=s('#lastAction'); this.holdNameEl=s('#holdName');
@@ -243,7 +241,9 @@ class Game{
     this.updateHUD(); this.draw();
   }
   bindKeys(){
+    const preventKeys = new Set(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space']);
     addEventListener('keydown',e=>{
+      if(preventKeys.has(e.code)) e.preventDefault();
       if(e.repeat) return;
       if(e.code==='KeyP'){this.togglePause(); return}
       if(!this.alive||this.paused) return;
@@ -252,18 +252,19 @@ class Game{
         case 'ArrowRight': this.moveDir=1; this.move(1); this.dasTimer=0; break;
         case 'ArrowDown': this.softDrop=true; break;
         case 'Space': this.hardDrop(); break;
-        case 'KeyZ': this.rotate(-1); break;
-        case 'KeyX': this.rotate(1); break;
-        case 'KeyA': this.rotate(2); break; // 180
+        case 'KeyZ': this.rotate(-1); break;           // CCW: Z
+        case 'ArrowUp': this.rotate(1); break;         // CW: Up Arrow
+        case 'KeyA': this.rotate(2); break;            // 180°: A
         case 'KeyC': this.holdSwap(); break;
         case 'KeyR': this.reset(); break;
       }
-    });
+    }, {passive:false});
     addEventListener('keyup',e=>{
+      if(preventKeys.has(e.code)) e.preventDefault();
       if(e.code==='ArrowLeft'&&this.moveDir==-1) this.moveDir=0;
       if(e.code==='ArrowRight'&&this.moveDir==1) this.moveDir=0;
       if(e.code==='ArrowDown'){ this.softDrop=false; this.softLockTimer=0; }
-    })
+    }, {passive:false})
   }
   togglePause(){this.paused=!this.paused; this.statusEl.textContent=this.paused?'Paused':'Playing'}
   updateHUD(){ this.scoreEl.textContent=this.score; this.levelEl.textContent=this.level; this.linesEl.textContent=this.lines; this.holdNameEl.textContent=this.hold?this.hold.type:'없음'; }
@@ -293,8 +294,7 @@ class Game{
   gravityStep(){
     if(!this.board.collide(this.active,0,1)){
       this.active.y++;
-      // falling resets ground timers
-      this.lockTimer=0; this.softLockTimer=0;
+      this.lockTimer=0; this.softLockTimer=0; // airborne resets
     } else {
       // grounded
       if(this.softDrop){
@@ -321,7 +321,7 @@ class Game{
     const cx=p.x+1, cy=p.y+1; // pivot
     const corners=[[0,0],[2,0],[0,2],[2,2]];
     let occ=0; for(const [dx,dy] of corners){ const x=cx+dx-1, y=cy+dy-1; if(y<0) continue; if(!this.board.inside(x,y)||this.board.grid[y][x]) occ++; }
-    if(occ>=3) return {type:'TSPIN'}; // simple
+    if(occ>=3) return {type:'TSPIN'}; // simple full T-Spin
     return null;
   }
 
@@ -335,10 +335,9 @@ class Game{
     } else {
       if(cleared===1) add=100; else if(cleared===2) add=300; else if(cleared===3) add=500; else if(cleared===4) { add=800; label='Tetris'; }
     }
-    if(fromHard) add+=2; // tiny bonus already added per-cell during drop
+    if(fromHard) add+=2;
     this.score+=add; this.lines+=cleared; if(this.lines> this.level*10){ this.level++; this.gravity=Math.max(8,GRAVITY_START - this.level*3); }
-    this.updateHUD();
-    if(label) this.lastAction(label);
+    this.updateHUD(); if(label) this.lastAction(label);
   }
 
   lastAction(t){ this.lastActionEl.textContent=t; }
@@ -378,25 +377,28 @@ class Game{
     this.drawHold(); this.drawNext();
   }
 
-  drawHold(){ const ctx=this.hctx; ctx.clearRect(0,0,128,128); if(!this.hold) return; this.drawMini(ctx,this.hold); }
-  drawNext(){ this.nextCanvases.forEach((ctx,i)=>{ ctx.clearRect(0,0,128,80); this.drawMini(ctx,this.queue[i],80); }); }
+  drawHold(){ const ctx=this.hctx; ctx.clearRect(0,0,128,128); if(!this.hold) return; this.drawMini(ctx,this.hold,128,128); }
+  drawNext(){ this.nextCanvases.forEach((ctx,i)=>{ const c=ctx.canvas; ctx.clearRect(0,0,c.width,c.height); this.drawMini(ctx,this.queue[i],c.width,c.height); }); }
 
-  drawMini(ctx,piece,h=128){ const m=SHAPES[piece.type]; const N=m.length; const sz=Math.floor( (h-16) / N ); const ox=Math.floor((128 - N*sz)/2), oy=Math.floor((h - N*sz)/2);
-    ctx.save(); ctx.translate(ox,oy);
-    for(let y=0;y<N;y++)for(let x=0;x<N;x++) if(m[y][x]) this.drawRect(ctx,x*sz,y*sz,sz,sz,COLORS[piece.type]);
-    ctx.restore(); }
-
-  drawPiece(px,py,matrix,color,alpha=1){ const ctx=this.ctx; const N=matrix.length; ctx.save(); ctx.globalAlpha=alpha; for(let y=0;y<N;y++)for(let x=0;x<N;x++) if(matrix[y][x]) this.drawCell(ctx,px+x,py+y,color); ctx.restore(); }
-
-  drawCell(ctx,x,y,color){ if(y<0) return; const px=x*SIZE, py=y*SIZE; this.drawRect(ctx,px,py,SIZE,SIZE,color); }
-
-  drawRect(ctx,x,y,w,h,color){
-    // minimalist tile: flat fill + subtle border
+  drawMini(ctx,piece,w=128,h=128){
+    const m=SHAPES[piece.type];
+    // compute bounding box
+    let minX=99,minY=99,maxX=-99,maxY=-99;
+    for(let y=0;y<m.length;y++) for(let x=0;x<m[y].length;x++) if(m[y][x]){ if(x<minX)minX=x; if(x>maxX)maxX=x; if(y<minY)minY=y; if(y>maxY)maxY=y; }
+    const bw=maxX-minX+1, bh=maxY-minY+1;
+    const pad=10; const cell = Math.floor(Math.min((w-2*pad)/bw, (h-2*pad)/bh));
+    const ox = Math.floor((w - bw*cell)/2) - minX*cell;
+    const oy = Math.floor((h - bh*cell)/2) - minY*cell;
     ctx.save();
-    ctx.fillStyle=color; ctx.fillRect(x+1,y+1,w-2,h-2);
-    ctx.lineWidth=1; ctx.strokeStyle='rgba(255,255,255,.06)'; ctx.strokeRect(x+0.5,y+0.5,w-1,h-1);
+    for(let y=0;y<m.length;y++) for(let x=0;x<m[y].length;x++) if(m[y][x]){
+      this.drawRect(ctx, ox + x*cell, oy + y*cell, cell, cell, COLORS[piece.type]);
+    }
     ctx.restore();
   }
+
+  drawPiece(px,py,matrix,color,alpha=1){ const ctx=this.ctx; const N=matrix.length; ctx.save(); ctx.globalAlpha=alpha; for(let y=0;y<N;y++)for(let x=0;x<N;x++) if(matrix[y][x]) this.drawCell(ctx,px+x,py+y,color); ctx.restore(); }
+  drawCell(ctx,x,y,color){ if(y<0) return; const px=x*SIZE, py=y*SIZE; this.drawRect(ctx,px,py,SIZE,SIZE,color); }
+  drawRect(ctx,x,y,w,h,color){ ctx.save(); ctx.fillStyle=color; ctx.fillRect(x+1,y+1,w-2,h-2); ctx.lineWidth=1; ctx.strokeStyle='rgba(255,255,255,.06)'; ctx.strokeRect(x+0.5,y+0.5,w-1,h-1); ctx.restore(); }
 }
 
 function s(q){return document.querySelector(q)}
