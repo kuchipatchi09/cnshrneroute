@@ -5,148 +5,150 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>QPI LOADING</title>
   <style>
+    /* ==================================
+       QPI LOADING — Apple-ish / QPI Guide 기반
+       - 좌측 상단 흰색 QPI 로고 (BR Cobane)
+       - 퍼센트 텍스트 Pretendard
+       - QPI 컬러 팔레트 반영 + 화이트 테두리 바
+       ================================== */
+
+    /* 폰트 설정: 실제 배포 시 웹폰트 경로로 교체하세요 */
+    @font-face {
+      font-family: 'BR Cobane';
+      src: local('BR Cobane'); /* 배포 시 woff2 등록 권장 */
+      font-weight: 400 900;
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Pretendard';
+      src: local('Pretendard Variable'), local('Pretendard');
+      font-weight: 100 900;
+      font-style: normal;
+      font-display: swap;
+    }
+
     :root{
-      /* Palette */
-      --bg:#0b0d10;               /* 페이지 배경 */
-      --fg:#eef3ff;               /* 텍스트 */
-      --accent:#9ecbff;           /* 그라디언트 시작 */
-      --accent-2:#b79dff;         /* 그라디언트 끝 */
-      --accent-3:#c2fff9;         /* 스파클 */
-      --white:#ffffff;
+      /* QPI Design (https://qpi.kro.kr/design/) 색상표 참고 */
+      --bg-dark: #232323;      /* Background Dark */
+      --bg-light: #FAFAFA;     /* Background Light (미사용) */
+      --text-dark: #1C1C1E;    /* Text on light */
+      --text-light: #FAFAFA;   /* Text on dark */
+      --gray-3: #AEAEB2;       /* subtle strokes */
+      --gray-4: #8E8E93;
+      --blue: #0A84FF;         /* QPI Blue (Dark) */
+      --blue-active: #0AA0FF;  /* QPI Blue Active (Dark) */
 
-      /* Bar geometry */
-      --w:clamp(280px, 72vw, 620px);
-      --h:20px;
-      --radius:16px;
-      --border:#ffffffaa;         /* 외곽선 색 */
-      --border-weak:#ffffff33;    /* 내부 하이라이트 라인 */
-      --border-w:1.2px;           /* 외곽선 두께 */
-
-      /* Motion */
-      --duration:1.05s;           /* 스트라이프 이동 */
-      --shine:2.2s;               /* 샤인 스윕 */
-      --p:0;                      /* 진행률(0~100) */
-
-      /* Effects */
-      --glow:40px;                /* 바 글로우 */
-      --noise:0.035;              /* 필름 노이즈 강도 */
+      /* Loader geometry */
+      --w: clamp(300px, 68vw, 640px);
+      --h: 22px;
+      --radius: 16px;
+      --outline: #ffffffcc;     /* 흰색 테두리 */
+      --inner-hair: #ffffff33;  /* 내부 헤어라인 */
+      --glow: 34px;
+      --stripe-speed: 1.05s;    /* 스트라이프 속도 */
+      --shine-speed: 2.2s;      /* 샤인 스윕 속도 */
+      --p: 0;                   /* 진행률 (0~100) */
     }
 
-    /* Apple-ish Font Stack (CR Cobane 우선) */
-    :root{ --font:"CR Cobane", "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+    html,body{height:100%;margin:0;background:var(--bg-dark);color:var(--text-light);}
 
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:var(--font);}
-    .wrap{min-height:100%;display:grid;place-items:center;position:relative;overflow:hidden}
+    .stage{min-height:100%;display:grid;grid-template-rows:auto 1fr;}
 
-    /* ===== Ambient background (블러 블랍 + 노이즈) ===== */
-    .blob{position:absolute;filter:blur(64px);opacity:.55;pointer-events:none}
-    .b1{width:36vw;height:36vw;min-width:320px;min-height:320px;left:-10vw;top:-8vh;border-radius:999px;background:radial-gradient(closest-side, #7aa2ff40, #0000 70%);}    
-    .b2{width:30vw;height:30vw;min-width:260px;min-height:260px;right:-8vw;bottom:-6vh;border-radius:999px;background:radial-gradient(closest-side, #9d7aff33, #0000 70%);}  
-
-    /* subtle film noise */
-    .noise{position:absolute;inset:0;pointer-events:none;mix-blend-mode:soft-light;opacity:.16;
-      background-image: repeating-radial-gradient(#fff1 0 0.5px, #0000 0.5px 1px);
-      background-size: 3px 3px;
-      animation: grain 6s steps(6) infinite;
-    }
-    @keyframes grain{ to{transform:translate3d(0.5rem,0,0)} }
-
-    /* ===== Quarter-Pie ornaments (모서리 장식) ===== */
-    .qp{position:absolute;width:120px;height:120px;opacity:.25;filter:blur(0.4px);}
-    .qp::before{content:"";position:absolute;inset:0;border-radius:120px 0 0 0;
-      background:conic-gradient(from 210deg, #fff0 0 70deg, #ffffff18 80deg, #fff0 140deg);
-    }
-    .qp.tl{left:6vw;top:8vh; transform:rotate(0deg); animation: qprot 14s linear infinite;}
-    .qp.br{right:8vw;bottom:10vh; transform:rotate(180deg); animation: qprot 16s linear infinite reverse;}
-    @keyframes qprot{ to{ transform:rotate(360deg);} }
-
-    /* ===== Percentage ===== */
-    .pct{font-weight:800;letter-spacing:.02em;font-variant-numeric:tabular-nums;line-height:1; 
-         font-size:clamp(22px,6vw,38px);margin-bottom:18px;
-         text-shadow:0 0 24px color-mix(in oklab, var(--accent) 28%, transparent);
+    /* 상단 바: 로고 */
+    .topbar{display:flex;align-items:center;gap:10px;padding:20px 24px;}
+    .logo{
+      font-family:'BR Cobane', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial;
+      color:#fff; font-weight:800; font-size:20px; letter-spacing:0.06em; text-transform:uppercase;
+      text-shadow:0 0 16px #ffffff40;
+      user-select:none;
     }
 
-    /* ===== Glass Panel (bar frame) ===== */
-    .panel{position:relative;display:grid;gap:14px;place-items:center;padding:26px 22px;border-radius:20px;
-      background: linear-gradient(180deg, #ffffff0a, #ffffff05 60%, #00000018), rgba(255,255,255,0.02);
-      border: 1px solid #ffffff1f;
-      box-shadow: 0 10px 30px #0008, inset 0 1px 1px #ffffff22, inset 0 -1px 2px #000a;
+    /* 가운데 컨텐츠 */
+    .center{display:grid;place-items:center;}
+    .panel{position:relative;display:grid;gap:18px;place-items:center;padding:28px 24px;border-radius:20px;
+      background: linear-gradient(180deg, #ffffff10, #ffffff08 60%, #00000014), rgba(255,255,255,0.02);
+      border: 1px solid #ffffff1a;
+      box-shadow: 0 12px 30px #0009, inset 0 1px 1px #ffffff22, inset 0 -1px 2px #000a;
       -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
     }
 
-    /* ===== Bar ===== */
+    /* 퍼센트 텍스트: Pretendard */
+    .pct{font-family:'Pretendard', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial;
+      font-weight:800; font-variant-numeric:tabular-nums; letter-spacing:.02em;
+      font-size: clamp(22px, 6vw, 38px); line-height:1; text-shadow:0 0 18px #0a84ff44;
+      margin-bottom:6px; user-select:none;
+    }
+
+    /* 로딩 바 */
     .bar{position:relative;width:var(--w);height:var(--h);border-radius:var(--radius);overflow:hidden;isolation:isolate;
       background: linear-gradient(180deg, #0f131a, #0c1016);
-      /* White outline (outside) */
-      box-shadow: 0 0 0 var(--border-w) var(--border), inset 0 1px 0 #ffffff1a, inset 0 -1px 0 #00000066,
-                  0 12px 28px #0009;
+      box-shadow: 0 0 0 1.2px var(--outline), inset 0 1px 0 #ffffff1a, inset 0 -1px 0 #00000066, 0 16px 34px #0008;
     }
-    /* Inner white hairline */
-    .bar::before{content:"";position:absolute;inset:1px;border-radius:calc(var(--radius) - 1px); pointer-events:none;
-      box-shadow: inset 0 0 0 1px var(--border-weak);
-    }
+    .bar::before{content:"";position:absolute;inset:1px;border-radius:calc(var(--radius) - 1px);box-shadow: inset 0 0 0 1px var(--inner-hair);pointer-events:none}
 
-    /* Fill */
     .fill{position:absolute;inset:0;height:100%;width:calc(var(--p) * 1%);border-radius:inherit;
       background:
-        linear-gradient(90deg, var(--accent), var(--accent-2)),
-        repeating-linear-gradient(45deg, #ffffff26 0 10px, #ffffff08 10px 20px);
-      background-size:auto 100%, 28px 100%;
-      background-position:0 0, 0 0;
-      filter: saturate(118%);
-      box-shadow: 0 0 0 1px #ffffff10 inset, 0 0 var(--glow) color-mix(in oklab, var(--accent-2) 60%, transparent);
-      transform: translateZ(0);
-      animation: stripes var(--duration) linear infinite;
+        linear-gradient(90deg, var(--blue), var(--blue-active)),
+        repeating-linear-gradient(45deg, #ffffff24 0 10px, #ffffff08 10px 20px);
+      background-size: auto 100%, 26px 100%;
+      filter:saturate(118%);
+      box-shadow: 0 0 0 1px #ffffff10 inset, 0 0 var(--glow) color-mix(in oklab, var(--blue-active) 60%, transparent);
+      animation: stripes var(--stripe-speed) linear infinite;
     }
-    /* Gloss highlight */
-    .fill::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(180deg,#ffffff66,#ffffff00 42%);mix-blend-mode:overlay}
+    .fill::after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(180deg,#ffffff55,#ffffff00 46%);mix-blend-mode:overlay}
 
-    /* Shine sweep */
-    .shine{position:absolute;inset:-40% -10%;background:linear-gradient(100deg,#fff0,#ffffff12 35%,#ffffff22 50%,#ffffff12 65%,#fff0);
-      transform:skewX(-18deg);mix-blend-mode:screen;pointer-events:none;animation:sweep var(--shine) ease-in-out infinite}
+    .shine{position:absolute;inset:-40% -10%;background:linear-gradient(100deg,#fff0,#ffffff16 35%,#ffffff26 50%,#ffffff16 65%,#fff0);
+      transform:skewX(-18deg);mix-blend-mode:screen;pointer-events:none;animation: sweep var(--shine-speed) ease-in-out infinite}
 
-    /* Reflection under bar */
     .reflect{position:absolute;inset:auto 0 -24px 0;height:24px;border-radius:0 0 var(--radius) var(--radius);
-      background: linear-gradient(180deg, color-mix(in oklab, var(--accent-2) 30%, transparent), transparent);
+      background: linear-gradient(180deg, color-mix(in oklab, var(--blue-active) 30%, transparent), transparent);
       filter: blur(10px); opacity:.55; clip-path: inset(6px 0 0 0 round 0 0 var(--radius) var(--radius)); pointer-events:none;
     }
 
-    /* Sparks at the edge */
+    /* 스파클 파티클 */
     .spark{position:absolute;bottom:50%;left:calc(var(--p) * 1%);width:8px;height:8px;border-radius:999px;pointer-events:none;
       background:radial-gradient(circle at 30% 30%, #fff, #fff0 60%);
-      filter: drop-shadow(0 0 10px var(--accent-3)); transform:translate(-50%,50%); opacity:0; animation:spark 1.6s ease-in-out infinite}
+      filter: drop-shadow(0 0 10px #c2fff9); transform:translate(-50%,50%); opacity:0; animation:spark 1.5s ease-in-out infinite}
     .spark.s2{animation-delay:.12s}.spark.s3{animation-delay:.24s}.spark.s4{animation-delay:.36s}.spark.s5{animation-delay:.48s}
 
-    /* Animations */
-    @keyframes stripes{to{background-position:0 0, 28px 0}}
+    /* Ambient blobs (은은한 컬러 오라) */
+    .blob{position:absolute;filter:blur(60px);opacity:.5;pointer-events:none}
+    .b1{width:36vw;height:36vw;min-width:320px;min-height:320px;left:-8vw;top:-8vh;border-radius:999px;background:radial-gradient(closest-side, #0a84ff33, #0000 70%);}    
+    .b2{width:32vw;height:32vw;min-width:280px;min-height:280px;right:-8vw;bottom:-8vh;border-radius:999px;background:radial-gradient(closest-side, #0aa0ff2e, #0000 70%);}  
+
+    /* 스트라이프/샤인/스파클 애니메이션 */
+    @keyframes stripes{to{background-position:0 0, 26px 0}}
     @keyframes sweep{0%{transform:translateX(-120%) skewX(-18deg)}50%{transform:translateX(20%) skewX(-18deg)}100%{transform:translateX(120%) skewX(-18deg)}}
     @keyframes spark{0%{opacity:0;transform:translate(calc(-50% + 0px),50%) scale(.5)}15%{opacity:1}50%{transform:translate(calc(-50% + 8px),-8px) scale(1)}100%{opacity:0;transform:translate(calc(-50% + 14px),-28px) scale(.6)}}
 
-    /* Reduced motion */
-    @media (prefers-reduced-motion: reduce){ .fill,.shine,.spark,.noise,.qp{animation:none !important} }
+    @media (prefers-reduced-motion: reduce){ .fill,.shine,.spark{animation:none !important} }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="blob b1"></div>
-    <div class="blob b2"></div>
-    <div class="qp tl"></div>
-    <div class="qp br"></div>
-    <div class="noise"></div>
+  <div class="stage">
+    <header class="topbar">
+      <div class="logo">QPI</div>
+    </header>
 
-    <section class="panel" aria-label="QPI Loading">
-      <div class="pct" id="qpiPct">0%</div>
-      <div class="bar">
-        <div class="fill" id="qpiFill"></div>
-        <div class="shine"></div>
-        <div class="reflect"></div>
-        <span class="spark s1"></span>
-        <span class="spark s2"></span>
-        <span class="spark s3"></span>
-        <span class="spark s4"></span>
-        <span class="spark s5"></span>
-      </div>
-    </section>
+    <div class="center">
+      <div class="blob b1"></div>
+      <div class="blob b2"></div>
+
+      <section class="panel" aria-label="QPI Loading">
+        <div class="pct" id="qpiPct">0%</div>
+        <div class="bar">
+          <div class="fill" id="qpiFill"></div>
+          <div class="shine"></div>
+          <div class="reflect"></div>
+          <span class="spark s1"></span>
+          <span class="spark s2"></span>
+          <span class="spark s3"></span>
+          <span class="spark s4"></span>
+          <span class="spark s5"></span>
+        </div>
+      </section>
+    </div>
   </div>
 
   <script>
