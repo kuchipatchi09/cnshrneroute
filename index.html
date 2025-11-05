@@ -4,38 +4,219 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>최적 경로 그리기</title>
+
+  <!-- Pretendard 폰트 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+
+  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script src="https://unpkg.com/leaflet-polylinedecorator@1.7.0/dist/leaflet.polylineDecorator.min.js"></script>
+
   <style>
-    :root {
-      --bg:#ffffff; --card:#f8fafc; --ink:#0f172a; --muted:#475569; --accent:#2563eb;
-      --border:#e5e7eb; --ink-weak:#334155; --chip:#eef2ff;
+    :root{
+      --bg: #f7fafc;
+      --card: #ffffff;
+      --panel: #f1f5f9;
+      --ink: #0f172a;
+      --muted: #475569;
+      --accent: #2563eb;
+      --accent-2: #7c3aed;
+      --border: #e6edf3;
+      --chip: #eef2ff;
+      --success: #16a34a;
+      --danger: #ef4444;
+      --glass: rgba(255,255,255,0.6);
     }
-    *{ box-sizing:border-box; }
-    body { margin:0; background:var(--bg); color:var(--ink); font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Noto Sans,Ubuntu,Cantarell,Helvetica Neue,Arial; }
-    header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; background:#fff; position:sticky; top:0; z-index:10; }
-    header h1 { margin:0; font-size:18px; font-weight:800; letter-spacing:.2px; }
-    .container { display:grid; grid-template-columns:420px 1fr; height:calc(100vh - 58px); }
-    .panel { background:var(--card); border-right:1px solid var(--border); overflow:auto; }
-    .panel section { padding:16px; border-bottom:1px solid var(--border); }
-    .panel h2 { font-size:13px; margin:0 0 8px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; }
-    label { font-size:12px; color:var(--muted); display:block; margin:8px 0 4px; }
-    input[type="text"], textarea, select { width:100%; padding:10px 12px; border-radius:10px; border:1px solid var(--border); background:#fff; color:var(--ink); }
-    textarea { resize:vertical; min-height:140px; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-    .row { display:flex; gap:8px; }
-    .btn { display:inline-flex; align-items:center; gap:8px; background:#111827; color:#fff; border:1px solid #111827; padding:10px 12px; border-radius:12px; cursor:pointer; font-weight:700; }
-    .btn.secondary{ background:#fff; color:#111827; border-color:var(--border); }
-    .btn:disabled { opacity:.5; cursor:not-allowed; }
+
+    /* 전체 Pretendard 적용 (Regular 기본) */
+    html,body{
+      height:100%;
+    }
+    body {
+      margin:0;
+      background: linear-gradient(180deg,#f8fbff 0%, var(--bg) 100%);
+      color:var(--ink);
+      font-family: "Pretendard", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", "Helvetica Neue", Arial;
+      font-weight:400;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      -webkit-tap-highlight-color:transparent;
+    }
+
+    /* App header */
+    header {
+      padding:18px 22px;
+      border-bottom:1px solid var(--border);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      background: linear-gradient(90deg, rgba(255,255,255,0.7), rgba(255,255,255,0.95));
+      position:sticky;
+      top:0;
+      z-index:30;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 1px 0 rgba(16,24,40,0.02);
+    }
+
+    /* 사이트 제목: Pretendard Bold */
+    header h1{
+      margin:0;
+      font-size:19px;
+      font-weight:700; /* Bold */
+      letter-spacing:0.2px;
+      color:var(--ink);
+    }
+
+    .chip {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:var(--chip);
+      color:#3730a3;
+      font-size:12px;
+      border:1px solid rgba(55,48,163,0.08);
+      box-shadow: 0 1px 3px rgba(15,23,42,0.03);
+    }
+
+    /* Layout */
+    .container {
+      display:grid;
+      grid-template-columns:420px 1fr;
+      gap:0;
+      height:calc(100vh - 66px);
+    }
+
+    /* Left panel */
+    .panel {
+      background: transparent;
+      padding:16px;
+      border-right:0;
+      overflow:auto;
+      box-shadow: inset -1px 0 0 var(--border);
+    }
+
+    .panel > section {
+      background: var(--card);
+      border-radius:12px;
+      padding:16px;
+      margin-bottom:14px;
+      border:1px solid var(--border);
+      box-shadow: 0 6px 18px rgba(16,24,40,0.03);
+    }
+
+    .panel h2 {
+      font-size:12px;
+      margin:0 0 10px 0;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:0.08em;
+    }
+
+    label { font-size:13px; color:var(--muted); display:block; margin:6px 0 6px; }
+
+    input[type="text"], textarea, select {
+      width:100%;
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:#fff;
+      color:var(--ink);
+      font-size:14px;
+      outline:none;
+      transition: box-shadow .12s, border-color .12s;
+    }
+
+    input[type="text"]:focus, textarea:focus, select:focus{
+      box-shadow: 0 6px 18px rgba(37,99,235,0.06);
+      border-color: rgba(37,99,235,0.28);
+    }
+
+    textarea { resize:vertical; min-height:140px; font-family: "Pretendard", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+    .row { display:flex; gap:8px; align-items:center; }
+
+    .btn {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      background: linear-gradient(180deg,#0f172a 0%, #111827 100%);
+      color:#fff;
+      border: none;
+      padding:10px 14px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:700;
+      font-size:14px;
+      box-shadow: 0 8px 24px rgba(15,23,42,0.12);
+    }
+
+    .btn.secondary {
+      background:#fff;
+      color:var(--ink);
+      border:1px solid var(--border);
+      font-weight:600;
+      box-shadow:none;
+    }
+
+    .btn:active{ transform: translateY(1px); }
+
     .hint { font-size:12px; color:var(--muted); margin-top:6px; }
-    .stats { font-size:13px; line-height:1.5; background:#fff; border:1px solid var(--border); border-radius:10px; padding:10px; }
-    .table { width:100%; border-collapse: collapse; font-size:12px; background:#fff; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
-    .table th, .table td { padding:8px 10px; border-bottom:1px solid var(--border); text-align:left; }
-    .chip { display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:999px; background:var(--chip); color:#3730a3; font-size:11px; }
-    #map { height:calc(100vh - 58px); width:100%; }
-    .num-label { background:#ef4444; color:#fff; border-radius:8px; padding:2px 6px; font-size:11px; border:1px solid rgba(0,0,0,.12); }
-    .footer { font-size:11px; color:var(--muted); }
-    a { color: var(--accent); text-decoration: none; }
+
+    .stats {
+      font-size:13px;
+      line-height:1.5;
+      background: linear-gradient(180deg,#ffffff,#fbfdff);
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:12px;
+      color:var(--ink);
+    }
+
+    .table {
+      width:100%;
+      border-collapse: collapse;
+      font-size:13px;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:10px;
+      overflow:hidden;
+      box-shadow:0 6px 18px rgba(2,6,23,0.02);
+    }
+
+    .table thead { background: linear-gradient(90deg, rgba(240,249,255,0.6), rgba(255,255,255,0.6)); }
+    .table th, .table td {
+      padding:10px 12px;
+      border-bottom:1px solid var(--border);
+      text-align:left;
+    }
+
+    .num-label {
+      background: var(--danger);
+      color:#fff;
+      border-radius:8px;
+      padding:3px 7px;
+      font-size:12px;
+      border:1px solid rgba(0,0,0,0.06);
+      font-weight:700;
+    }
+
+    .footer { font-size:12px; color:var(--muted); }
+
+    /* Map area */
+    #map {
+      height: calc(100vh - 66px);
+      width:100%;
+    }
+
+    /* Responsive */
+    @media (max-width:980px){
+      .container { grid-template-columns: 1fr; grid-auto-rows: minmax(120px, auto); }
+      #map { height:60vh; }
+      .panel { order:2; height:auto; }
+    }
   </style>
 </head>
 <body>
@@ -43,11 +224,12 @@
     <h1>최적경로 그리기</h1>
     <div class="chip" id="statusPill">Idle</div>
   </header>
+
   <div class="container">
     <div class="panel">
       <section>
         <h2>Config</h2>
-        <div class="row" style="margin-top:10px;">
+        <div class="row" style="margin-top:6px;">
           <div style="flex:1">
             <label>Profile</label>
             <select id="profile">
@@ -61,6 +243,7 @@
             <input id="zoomStart" type="text" value="14" />
           </div>
         </div>
+        <div class="hint" style="margin-top:10px;">주소/좌표 입력 지원 — 출발지와 목록을 스냅해서 시작합니다.</div>
       </section>
 
       <section>
@@ -82,10 +265,10 @@
       <section>
         <h2>Points</h2>
         <label>각 지점을 한 줄에 하나씩 입력 (예: "부산역" 또는 "35.101934,129.030607")</label>
-        <textarea id="pointsBox"></textarea>
-        <label>라벨 (쉼표로 구분, 비우면 자동)</label>
+        <textarea id="pointsBox" placeholder="예:&#10;부산역&#10;35.101934,129.030607&#10;광안리 해수욕장"></textarea>
+        <label style="margin-top:8px;">라벨 (쉼표로 구분, 비우면 자동)</label>
         <input id="labelsBox" type="text" placeholder="A,B,C,D,..." />
-        <div class="row" style="margin-top:10px; gap:12px;">
+        <div class="row" style="margin-top:12px; gap:12px;">
           <button class="btn" id="runBtn">최단 오픈 경로 그리기</button>
           <button class="btn secondary" id="clearBtn">초기화</button>
         </div>
@@ -96,13 +279,14 @@
         <div class="stats" id="stats"></div>
         <div style="margin-top:12px;">
           <table class="table" id="resultTable">
-            <thead><tr><th>#</th><th>Label</th><th>Lat</th><th>Lon</th></tr></thead>
+            <thead><tr><th style="width:44px">#</th><th>Label</th><th>Lat</th><th>Lon</th></tr></thead>
             <tbody></tbody>
           </table>
         </div>
-        <div class="footer" style="margin-top:8px;">오픈 경로(복귀 없음), 최근접이웃 → 2-opt. ORS Matrix/Directions + Leaflet.</div>
+        <div class="footer" style="margin-top:10px;">오픈 경로(복귀 없음), 최근접이웃 → 2-opt. ORS Matrix/Directions + Leaflet.</div>
       </section>
     </div>
+
     <div id="map"></div>
   </div>
 
@@ -122,6 +306,7 @@
       url.searchParams.set('text', text);
       url.searchParams.set('size', '1');
       const r = await fetch(url);
+      if(!r.ok) throw new Error(`Geocode 실패: ${r.status}`);
       const j = await r.json();
       const feat = j.features?.[0];
       if(!feat) throw new Error(`지오코드 실패: ${text}`);
@@ -134,6 +319,7 @@
         method:'POST', headers:{'Authorization':API_KEY,'Content-Type':'application/json'},
         body:JSON.stringify({ locations: coordsLonLat, metrics:['distance'], resolve_locations:true })
       });
+      if(!r.ok) throw new Error(`Matrix 실패: ${r.status}`);
       const j = await r.json();
       return j.distances;
     }
@@ -143,6 +329,7 @@
         method:'POST', headers:{'Authorization':API_KEY,'Content-Type':'application/json'},
         body:JSON.stringify({ coordinates:[aLonLat,bLonLat] })
       });
+      if(!r.ok) throw new Error(`Directions 실패: ${r.status}`);
       return await r.json();
     }
 
@@ -184,10 +371,13 @@
       route.forEach((idx,order)=>{
         const [lat,lon]=coordsLatLon[idx];
         const m=L.marker([lat,lon]).addTo(drawnLayer);
-        m.bindPopup(`${order+1}번째: ${labels[idx]}`).openPopup();
+        m.bindPopup(`${order+1}번째: ${labels[idx]}`);
         const el=document.createElement('div'); el.className='num-label'; el.textContent=String(order+1);
-        L.marker([lat,lon],{icon:L.divIcon({className:'',html:el,iconSize:[24,16]})}).addTo(drawnLayer);
+        L.marker([lat,lon],{icon:L.divIcon({className:'',html:el,iconSize:[28,18]})}).addTo(drawnLayer);
       });
+      const s=route[0], e=route[route.length-1];
+      L.circleMarker(coordsLatLon[s], { radius:8, color: 'var(--success)' }).addTo(drawnLayer).bindTooltip('출발지');
+      L.circleMarker(coordsLatLon[e], { radius:8, color: 'var(--danger)' }).addTo(drawnLayer).bindTooltip('도착지');
     }
 
     async function drawDirections(profile,coordsLonLat,route){
@@ -198,54 +388,4 @@
           const coords=gj.features[0].geometry.coordinates.map(([lon,lat])=>[lat,lon]);
           const line=L.polyline(coords,{weight:4}).addTo(drawnLayer);
           L.polylineDecorator(line,{patterns:[{offset:7,repeat:40,symbol:L.Symbol.arrowHead({pixelSize:10,pathOptions:{weight:2}})}]}).addTo(drawnLayer);
-        }catch(e){ console.warn('경로 그리기 실패:',e); }
-      }
-    }
-
-    function fillTable(route,labels,coordsLatLon){
-      const tbody=$("#resultTable tbody"); tbody.innerHTML='';
-      route.forEach((idx,i)=>{
-        const [lat,lon]=coordsLatLon[idx];
-        const tr=document.createElement('tr');
-        tr.innerHTML=`<td>${i+1}</td><td>${labels[idx]}</td><td>${lat.toFixed(6)}</td><td>${lon.toFixed(6)}</td>`;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function showStats(km,n){
-      $("#stats").innerHTML = `총 노드: <b>${n}</b><br/>총 경로 거리(도로): <b>${km.toFixed(2)} km</b>`;
-    }
-
-    $("#clearBtn").addEventListener('click',()=>{clearMap();$("#stats").textContent='';$("#resultTable tbody").innerHTML='';setStatus('Cleared');});
-
-    $("#runBtn").addEventListener('click', async ()=>{
-      try{
-        setStatus('Resolving points...'); clearMap();
-        const profile=$("#profile").value; const zoom=parseInt($("#zoomStart").value)||14;
-        const coordsLatLon=await resolvePointsFromTextarea();
-        const labels=normalizeLabels($("#labelsBox").value,coordsLatLon.length);
-
-        const startIdx=parseInt($("#startIndex").value)||0;
-        map.setView(coordsLatLon[startIdx],zoom);
-
-        setStatus('Building matrix...');
-        const coordsLonLat=ensureLonLat(coordsLatLon);
-        const distM=await orsMatrix(profile,coordsLonLat);
-
-        setStatus('Calculating route...');
-        const rough=nearestNeighborOpen(distM,startIdx);
-        const {route,meters}=twoOptOpen(rough,distM,true);
-
-        setStatus('Drawing...');
-        drawMarkers(coordsLatLon,labels,route);
-        await drawDirections(profile,coordsLonLat,route);
-
-        const km=meters/1000.0;
-        fillTable(route,labels,coordsLatLon);
-        showStats(km,coordsLatLon.length);
-        setStatus('Done');
-      }catch(err){ console.error(err); setStatus('Error'); alert(err.message||String(err)); }
-    });
-  </script>
-</body>
-</html>
+        }catch(e){ console.warn('
