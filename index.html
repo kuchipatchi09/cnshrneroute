@@ -150,7 +150,7 @@
 
     async function resolvePointsFromTextarea(){
       const lines = $("#pointsBox").value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
-      if(lines.length < 2) throw new Error('지점은 2개 이상 입력하세요.');
+      if(lines.length < 2) throw new Error('지점은 2개 이상 입력하세요. 첫번째 지점은 출발지의 좌표를 입력하세요.');
       const out = [];
       for(const line of lines){
         if(isLatLonLine(line)) out.push(parseLatLon(line));
